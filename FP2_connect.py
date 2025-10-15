@@ -221,7 +221,7 @@ def select_ip(hosts_df, ip_to_tnums):
 
         # Penis easter egg
         if user_input.lower() in {"пенис", "penis", "Пенис"}:
-            print("нет.")
+            show_penis()
             continue
 
         # Проблем нет!
