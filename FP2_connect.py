@@ -21,7 +21,7 @@ try:
 except Exception:
     CURSES_AVAILABLE = False
 
-PASSWORD = "Qread456minifp"
+PASSWORD = "yourpass"
 SEARCH_PATTERNS = ["*FP2*.csv", "*fp2*.csv", "FP2.csv", "fp2.csv"]
 
 # ---------------------------------------------------
