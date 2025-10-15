@@ -9,10 +9,8 @@ pip install pandas
 - Назвать файл FP2.csv
 - Поместить в папку со скриптом 
  
-- Открыть скрипт
-- В строке 11 указать путь до файла
-*CSV_PATH = os.path.expanduser("~/FP2.csv")  # Путь к таблице*
-
+# Изменить пароль!!!!
+PASSWORD = "yourpass"
 
 # Запуск из папки
 *Открыть в терминале*
@@ -22,6 +20,4 @@ python3 FP2_connect.py
 Команда:
 gnome-terminal -- /home/youruser/путь/FP2_connect.py
 *указать свой путь до файлика*
-
-
 
