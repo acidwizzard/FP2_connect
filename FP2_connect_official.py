@@ -21,7 +21,7 @@ try:
 except Exception:
     CURSES_AVAILABLE = False
 
-PASSWORD = "Qread456minifp"
+PASSWORD = "yourpass"
 SEARCH_PATTERNS = ["*FP2*.csv", "*fp2*.csv", "FP2.csv", "fp2.csv"]
 
 # ---------------------------------------------------
@@ -210,12 +210,7 @@ def select_ip(hosts_df, ip_to_tnums):
                 time.sleep(0.6)
             print("🤡\nХа-ха, очень смешно, клоуняра!\n")
             continue
-
-        # Penis easter egg
-        if user_input.lower() in {"пенис", "penis", "Пенис"}:
-            show_penis()
-            continue
-
+            
         # Проблем нет!
         if user_input.lower() in {"проблем нет!", "Проблем нет!", "проблем нет", "Проблем нет", "проблемы", "проблемы?", "есть проблемы?", "fp2", "fp2.0"}:
             print("✅ Проблем нет! ✅")
