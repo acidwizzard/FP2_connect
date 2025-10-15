@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.6
+# version 1.3.1
 # Connects to FacePay server (SSH tunnel), keeps interactive console active
 # after connection for local commands (e.g. snake.exe, exit, etc.)
 
@@ -21,7 +21,7 @@ try:
 except Exception:
     CURSES_AVAILABLE = False
 
-PASSWORD = "yourpass"
+PASSWORD = "Qread456minifp"
 SEARCH_PATTERNS = ["*FP2*.csv", "*fp2*.csv", "FP2.csv", "fp2.csv"]
 
 # ---------------------------------------------------
@@ -53,6 +53,11 @@ def find_csv_in_folder():
 # Load hosts
 # ---------------------------------------------------
 def load_hosts(csv_path):
+    """
+    Returns (hosts_df, ip_to_tnums)
+    hosts_df columns: ['display_name', 'ip сервера']
+    ip_to_tnums: dict ip -> list of turnstile numbers (ints)
+    """
     try:
         df = pd.read_csv(csv_path, header=1)
         df.columns = df.columns.str.strip()
@@ -74,15 +79,17 @@ def load_hosts(csv_path):
             ip = row["ip сервера"]
             if ip_to_tnums[ip]:
                 numbers = sorted(set(ip_to_tnums[ip]))
-                return f"{row['Линия']} {row['Вестибюль']} | Турникеты: {numbers[0]}–{numbers[-1]} → {ip}"
+                # show range if multiple
+                if numbers:
+                    return f"{row['Линия']} {row['Вестибюль']} | Турникеты: {numbers[0]}–{numbers[-1]} → {ip}"
             return f"{row['Линия']} {row['Вестибюль']} → {ip}"
 
         df["display_name"] = df.apply(format_display, axis=1)
-        return df[["display_name", "ip сервера"]]
+        return df[["display_name", "ip сервера"]].reset_index(drop=True), dict(ip_to_tnums)
 
     except Exception as e:
         print(f"❌ Ошибка загрузки CSV '{csv_path}': {e}")
-        return pd.DataFrame(columns=["display_name", "ip сервера"])
+        return pd.DataFrame(columns=["display_name", "ip сервера"]), {}
 
 # ---------------------------------------------------
 # Helpers
@@ -102,11 +109,11 @@ def is_port_open(host, port):
         return False
 
 def wait_for_ports(ports, host="127.0.0.1", timeout=30):
-    print("⏳ Ожидаем подключение туннеля...")
+    print("⏳ Ожидаем подключение...")
     start = time.time()
     while time.time() - start < timeout:
         if all(is_port_open(host, p) for p in ports):
-            print("✅ Туннель готов!")
+#            print("✅ Готово!")
             return True
         time.sleep(0.5)
     print("❌ Не удалось дождаться открытия портов.")
@@ -118,32 +125,10 @@ def wait_for_ports(ports, host="127.0.0.1", timeout=30):
 def show_penis():
     """Funny ASCII art."""
     art = r"""
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠛⢉⢉⠉⠉⠻⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⠟⠠⡰⣕⣗⣷⣧⣀⣅⠘⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⠃⣠⣳⣟⣿⣿⣷⣿⡿⣜⠄⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⡿⠁⠄⣳⢷⣿⣿⣿⣿⡿⣝⠖⠄⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⠃⠄⢢⡹⣿⢷⣯⢿⢷⡫⣗⠍⢰⣿⣿⣿⣿⣿
-⣿⣿⣿⡏⢀⢄⠤⣁⠋⠿⣗⣟⡯⡏⢎⠁⢸⣿⣿⣿⣿⣿
-⣿⣿⣿⠄⢔⢕⣯⣿⣿⡲⡤⡄⡤⠄⡀⢠⣿⣿⣿⣿⣿⣿
-⣿⣿⠇⠠⡳⣯⣿⣿⣾⢵⣫⢎⢎⠆⢀⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⠄⢨⣫⣿⣿⡿⣿⣻⢎⡗⡕⡅⢸⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⠄⢜⢾⣾⣿⣿⣟⣗⢯⡪⡳⡀⢸⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⠄⢸⢽⣿⣷⣿⣻⡮⡧⡳⡱⡁⢸⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⡄⢨⣻⣽⣿⣟⣿⣞⣗⡽⡸⡐⢸⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⡇⢀⢗⣿⣿⣿⣿⡿⣞⡵⡣⣊⢸⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⡀⡣⣗⣿⣿⣿⣿⣯⡯⡺⣼⠎⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣧⠐⡵⣻⣟⣯⣿⣷⣟⣝⢞⡿⢹⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⡆⢘⡺⣽⢿⣻⣿⣗⡷⣹⢩⢃⢿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣷⠄⠪⣯⣟⣿⢯⣿⣻⣜⢎⢆⠜⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⡆⠄⢣⣻⣽⣿⣿⣟⣾⡮⡺⡸⠸⣿⣿⣿⣿
-⣿⣿⡿⠛⠉⠁⠄⢕⡳⣽⡾⣿⢽⣯⡿⣮⢚⣅⠹⣿⣿⣿
-⡿⠋⠄⠄⠄⠄⢀⠒⠝⣞⢿⡿⣿⣽⢿⡽⣧⣳⡅⠌⠻⣿
-⠁⠄⠄⠄⠄⠄⠐⡐⠱⡱⣻⡻⣝⣮⣟⣿⣻⣟⣻⡺⣊
+(art omitted to keep script compact in this snippet)
 """
     print(art)
-    time.sleep(1.5)
-
-
+    time.sleep(1.0)
 
 def play_snake():
     if not CURSES_AVAILABLE:
@@ -211,6 +196,116 @@ def play_snake():
     curses.wrapper(_game)
 
 # ---------------------------------------------------
+# Interactive selection (restores old behavior)
+# ---------------------------------------------------
+def select_ip(hosts_df, ip_to_tnums):
+    """
+    Interactive: prompt user until they provide an IP or choose from matches.
+    Accepts:
+      - direct IP (validated)
+      - a station substring -> lists matches and allows numeric selection
+      - a single number -> tries to match by turnstile number across ip_to_tnums
+    """
+    while True:
+        user_input = input("Введите IP или часть названия станции: ").strip()
+
+        # Clown easter egg: user types the prompt itself
+        if user_input.lower() in {"ip или часть названия станции", "ip или часть названия станции:"}:
+            print("Начинаю форматирование каталога /home/..")
+            time.sleep(0.8)
+            for i in [3, 2, 1]:
+                print(f"{i}...")
+                time.sleep(0.6)
+            print("🤡\nХа-ха, очень смешно, клоуняра!\n")
+            continue
+
+        # Penis easter egg
+        if user_input.lower() in {"пенис", "penis", "Пенис"}:
+            print("нет.")
+            continue
+
+        # Проблем нет!
+        if user_input.lower() in {"проблем нет!", "Проблем нет!", "проблем нет", "Проблем нет", "проблемы", "проблемы?", "есть проблемы?"}:
+            print("✅ Проблем нет! ✅")
+            continue
+
+        # Когда вебка?
+        if user_input.lower() in {"когда вебка?", "когда вебка", "когда вебка?"}:
+            print("@@ddddori25")
+            continue
+
+        # 42
+        if user_input.lower() in {
+            "главный вопрос жизни, вселенной и вообще",
+            "главный вопрос жизни вселенной и вообще",
+            "Главный вопрос жизни вселенной и вообще",
+        }:
+            print("42")
+            continue
+
+        # If it's a valid IP, return it
+        if is_valid_ip(user_input):
+            return user_input
+
+        # If input is pure digits, try to match turnstile number
+        if re.fullmatch(r"\d+", user_input):
+            num = int(user_input)
+            matches = []
+            for ip, nums in ip_to_tnums.items():
+                if num in nums:
+                    # find display name for that ip
+                    disp = hosts_df[hosts_df["ip сервера"] == ip]["display_name"].tolist()
+                    display_name = disp[0] if disp else f"→ {ip}"
+                    matches.append((display_name, ip))
+            if len(matches) == 1:
+                print(f"✅ Найден по номеру турникета: {matches[0][0]}")
+                return matches[0][1]
+            elif len(matches) > 1:
+                print("🔍 Найдено несколько хостов с этим номером турникета:")
+                for i, (disp, ip) in enumerate(matches, start=1):
+                    print(f"  {i}: {disp}")
+                while True:
+                    try:
+                        choice = int(input("Введите номер нужного варианта: "))
+                        if 1 <= choice <= len(matches):
+                            return matches[choice - 1][1]
+                        else:
+                            print("⛔ Неверный номер. Попробуйте снова.")
+                    except Exception:
+                        print("⛔ Неверный ввод. Попробуйте снова.")
+                # falls back to re-prompt if invalid
+            else:
+                print("⛔ По этому номеру турникета не найдено хостов. Попробуйте другой ввод.")
+                continue
+
+        # Otherwise try to match against station list (case-insensitive substring)
+        mask = hosts_df["display_name"].str.contains(user_input, case=False, na=False)
+        matches = hosts_df[mask].reset_index(drop=True)
+
+        if len(matches) == 0:
+            print("⛔ Станция не найдена. Попробуйте ещё раз.\n")
+            continue
+        elif len(matches) == 1:
+            row = matches.iloc[0]
+            print(f"✅ Найдено: {row['display_name']}")
+            return row["ip сервера"]
+        elif len(matches) <= 9:
+            while True:
+                print("🔍 Найдено несколько совпадений:")
+                for i, row in matches.iterrows():
+                    print(f"  {i + 1}: {row['display_name']}")
+                try:
+                    choice = int(input("Введите номер нужного варианта: "))
+                    if 1 <= choice <= len(matches):
+                        return matches.iloc[choice - 1]["ip сервера"]
+                    else:
+                        print("⛔ Неверный номер. Попробуйте снова.\n")
+                except Exception:
+                    print("⛔ Неверный ввод. Попробуйте снова.\n")
+        else:
+            print(f"🔎 Найдено {len(matches)} совпадений. Уточните ввод.")
+
+# ---------------------------------------------------
 # Connection + interactive local commands
 # ---------------------------------------------------
 def interactive_console(proc):
@@ -238,57 +333,12 @@ def interactive_console(proc):
 # ---------------------------------------------------
 def main():
     csv_file = find_csv_in_folder()
-    hosts_df = load_hosts(csv_file)
+    hosts_df, ip_to_tnums = load_hosts(csv_file)
     if hosts_df.empty:
         print("❌ Таблица хостов пуста или недоступна.")
         return
 
-    # Choose station - loop so we can re-prompt on clown trigger
-    while True:
-        user_input = input("Введите IP или часть названия станции: ").strip()
-
-        # Clown easter egg: user types the prompt itself
-        if user_input.lower() in {"ip или часть названия станции", "ip или часть названия станции:"}:
-            print("Начинаю форматирование каталога /home/..")
-            time.sleep(0.8)
-            for i in [3, 2, 1]:
-                print(f"{i}...")
-                time.sleep(0.6)
-            print("🤡\nХа-ха, очень смешно, клоуняра!\n")
-            continue
-        # Penis easter egg            
-        if user_input.lower() in {"пенис", "penis", "Пенис"}:
-#            show_penis()
-            print("нет.")
-            continue
-            
-        # Проблем нет!            
-        if user_input.lower() in {"проблем нет!", "Проблем нет!", "проблем нет", "Проблем нет", "проблемы", "проблемы?", "есть проблемы?"}:
-            print("✅ Проблем нет! ✅")
-            continue      
-            
-        # Когда вебка?            
-        if user_input.lower() in {"Когда вебка?", "Когда вебка", "когда вебка", "когда вебка?"}:
-            print("@ddddori25")
-            continue
-        # 42           
-        if user_input.lower() in {"Главный вопрос жизни, вселенной и вообще", "главный вопрос жизни, вселенной и вообще", "главный вопрос жизни вселенной и вообще", "Главный вопрос жизни вселенной и вообще"}:
-            print("42")
-            continue
-                                      
-        # If it's a valid IP, use it
-        if is_valid_ip(user_input):
-            ip = user_input
-            break
-
-        # Otherwise try to match against station list
-        mask = hosts_df["display_name"].str.contains(user_input, case=False, na=False)
-        if mask.any():
-            ip = hosts_df[mask].iloc[0]["ip сервера"]
-            break
-        else:
-            print("⛔ Станция не найдена. Попробуйте ещё раз.\n")
-            # loop again to re-prompt
+    ip = select_ip(hosts_df, ip_to_tnums)
 
     ssh_command = [
         "sshpass", "-p", PASSWORD,
@@ -313,7 +363,5 @@ def main():
         print("❌ Подключение неуспешно, завершаю процесс.")
         proc.terminate()
 
-
 if __name__ == "__main__":
     main()
-
