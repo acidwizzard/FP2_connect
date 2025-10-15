@@ -1,6 +1,8 @@
 # Установка перед началом работы!!!
 sudo apt install sshpass
 
+sudo apt install python3-pip
+
 pip install pandas
 
 # Для работы поиска по названию
