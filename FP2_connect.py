@@ -21,7 +21,7 @@ try:
 except Exception:
     CURSES_AVAILABLE = False
 
-PASSWORD = "yourpass"
+PASSWORD = "Qread456minifp"
 SEARCH_PATTERNS = ["*FP2*.csv", "*fp2*.csv", "FP2.csv", "fp2.csv"]
 
 # ---------------------------------------------------
@@ -147,7 +147,6 @@ def show_penis():
 ⡿⠋⠄⠄⠄⠄⢀⠒⠝⣞⢿⡿⣿⣽⢿⡽⣧⣳⡅⠌⠻⣿
 ⠁⠄⠄⠄⠄⠄⠐⡐⠱⡱⣻⡻⣝⣮⣟⣿⣻⣟⣻⡺⣊
 """
-    p
     print(art)
     time.sleep(1.0)
 
@@ -252,7 +251,7 @@ def select_ip(hosts_df, ip_to_tnums):
 
         # Когда вебка?
         if user_input.lower() in {"когда вебка?", "когда вебка", "когда вебка?"}:
-            print("@@ddddori25")
+            print("@ddddori25")
             continue
 
         # 42
